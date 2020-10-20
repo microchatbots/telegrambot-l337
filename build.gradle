@@ -20,7 +20,6 @@ version "0.1"
 group "groovycalamari.bots"
 
 repositories {
-    mavenLocal()
     maven {
         url 'https://dl.bintray.com/microchatbots/releases'
     }
@@ -71,6 +70,11 @@ shadowJar {
     mergeServiceFiles()
 }
 
+BlockingTelegramBot bot
+if (System.getenv("TELEGRAM_TOKEN")) {
+    bot = new DefaultTelegramBot(System.getenv("TELEGRAM_TOKEN")).toBlocking()
+}
+
 gradleEnterprise {
     buildScan {
         termsOfServiceUrl = "https://gradle.com/terms-of-service"
@@ -79,11 +83,9 @@ gradleEnterprise {
         buildScanPublished { PublishedBuildScan scan ->
             if (System.getenv("TELEGRAM_TOKEN") && System.getenv("TELEGRAM_CHATID")) {
                 def githubSlug = project.findProperty('githubSlug')
-                BlockingTelegramBot bot = new DefaultTelegramBot(System.getenv("TELEGRAM_TOKEN")).toBlocking()
                 String msg = "https://github.com/${githubSlug}/actions/runs/${System.getenv("GITHUB_RUN_ID")} build failed: ${scan.buildScanId} - ${scan.buildScanUri}"
-                bot.sendMessage(msg, System.getenv("TELEGRAM_CHATID"))
+                bot.sendMessage(msg, System.getenv("TELEGRAM_CHATID") as Integer)
             }
         }
     }
 }
-
