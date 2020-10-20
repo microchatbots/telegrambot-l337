@@ -1,0 +1,89 @@
+import com.gradle.scan.plugin.PublishedBuildScan
+import com.microchatbots.telegrambots.api.BlockingTelegramBot
+import com.microchatbots.telegrambots.api.DefaultTelegramBot
+
+buildscript {
+    repositories {
+        maven { url "https://dl.bintray.com/microchatbots/releases" }
+    }
+    dependencies {
+        classpath "com.microchatbots:microchatbots-telegrambots:0.0.3"
+    }
+}
+plugins {
+    id "groovy"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "java"
+}
+
+version "0.1"
+group "groovycalamari.bots"
+
+repositories {
+    mavenLocal()
+    maven {
+        url 'https://dl.bintray.com/microchatbots/releases'
+    }
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+    annotationProcessor("io.micronaut:micronaut-validation")
+    implementation(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
+    implementation("io.micronaut:micronaut-inject")
+    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation "com.microchatbots:microchatbots-telegrambots-awslambda:0.0.3"
+    implementation("io.micronaut.aws:micronaut-function-aws")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    testImplementation(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
+    testImplementation("io.micronaut:micronaut-inject-groovy")
+    testImplementation("org.spockframework:spock-core") {
+        exclude group: "org.codehaus.groovy", module: "groovy-all"
+    }
+    testImplementation("io.micronaut.test:micronaut-test-spock")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion('11')
+    targetCompatibility = JavaVersion.toVersion('11')
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll([
+        '-parameters',
+        // enables incremental compilation
+        '-Amicronaut.processing.incremental=false',
+        '-Amicronaut.processing.annotations=groovycalamari.bots.*',
+        "-Amicronaut.processing.group=$project.group",
+        "-Amicronaut.processing.module=$project.name",
+    ])
+}
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = "https://gradle.com/terms-of-service"
+        termsOfServiceAgree = "yes"
+        publishOnFailureIf(System.getenv("GITHUB_RUN_ID") != null)
+        buildScanPublished { PublishedBuildScan scan ->
+            if (System.getenv("TELEGRAM_TOKEN") && System.getenv("TELEGRAM_CHATID")) {
+                def githubSlug = project.findProperty('githubSlug')
+                BlockingTelegramBot bot = new DefaultTelegramBot(System.getenv("TELEGRAM_TOKEN")).toBlocking()
+                String msg = "https://github.com/${githubSlug}/actions/runs/${System.getenv("GITHUB_RUN_ID")} build failed: ${scan.buildScanId} - ${scan.buildScanUri}"
+                bot.sendMessage(msg, System.getenv("TELEGRAM_CHATID"))
+            }
+        }
+    }
+}
+

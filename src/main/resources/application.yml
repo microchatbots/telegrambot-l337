@@ -1,0 +1,17 @@
+micronaut:
+  application:
+    name: l337
+---
+l337:
+  allowed-users:
+    - '${TELEGRAM_USER_ID}'
+---
+telegram:
+  bots:
+    l337:
+      token: '${TOKEN}'
+      at-username: '@L337DroidBot'
+      commands:
+        help: 'how to use this bot'
+        about: 'information about this bot'
+        info: 'returns chat and user id'
