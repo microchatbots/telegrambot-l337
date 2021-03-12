@@ -2,9 +2,11 @@
 
 [AWS Lambda Handler](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)
 
-Handler: groovycalamari.bots.Webhook
+Handler: `com.microchatbots.telegrambots.awslambda.Handler`
 
-## Feature aws-lambda documentation
+## Documentation
+
+### Feature aws-lambda documentation
 
 - [Micronaut AWS Lambda Function documentation](https://micronaut-projects.github.io/micronaut-aws/latest/guide/index.html#lambda)
 

@@ -1,5 +1,5 @@
 applicationType: function
-defaultPackage: groovycalamari.bots
+defaultPackage: groovycalamari.bots.l337
 testFramework: spock
 sourceLanguage: java
 buildTool: gradle
